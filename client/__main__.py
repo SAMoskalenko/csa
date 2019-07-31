@@ -1,9 +1,9 @@
-import yaml
+import yaml, json
+import hashlib
 from socket import socket
 from argparse import ArgumentParser
 from datetime import datetime as dt
 
-import json
 
 
 parser = ArgumentParser()
@@ -18,7 +18,7 @@ args = parser.parse_args()
 base_settings = {
     'host': 'localhost',
     'port': 8000,
-    'buffersize': 1024
+    'buffersize': 1024,
 }
 
 if args.settings:
@@ -31,12 +31,18 @@ client.connect((base_settings.get('host'), base_settings.get('port')))
 
 print('Client was started')
 
+hash_obj = hashlib.sha256()
+hash_obj.update(
+    str(dt.now().timestamp()).encode()
+)
+
 action = input('Enter action: ')
 data = input('Enter message: ')
 
 request = {
     'action': action,
     'data': data,
+    'token': hash_obj.hexdigest(),
     'time': dt.now().timestamp()
 }
 
