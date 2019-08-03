@@ -1,12 +1,10 @@
 import yaml
-import json
 import logging
 
+import select
 from socket import socket
 from argparse import ArgumentParser
-
-from protocol import validate_request, make_response
-from resolvers import resolve
+from handlers import handle_default_request
 
 parser = ArgumentParser()
 
@@ -39,41 +37,37 @@ logging.basicConfig(
     ]
 )
 
+connections = []
+requests = []
+
 try:
     server = socket()
-    server.bind((base_settings.get('host'), base_settings.get('port')))
+    server.bind((host, port))
+    server.setblocking(False)
     server.listen(5)
 
     logging.info(f'Server was started with {host}:{port}')
 
     while True:
-        client, address = server.accept()
-        logging.info(f'Client was connected with {address[0]}:{address[1]}')
-        client_request = client.recv(base_settings.get('buffersize'))
-        request = json.loads(client_request.decode())
+        try:
+            client, address = server.accept()
+            connections.append(client)
+            logging.info(f'Client was connected with {address[0]}:{address[1]} | Connections: {connections}')
+        except:
+            pass
 
-        if validate_request(request):
-            action = request.get('action')
-            controller = resolve(action)
+        rlist, wlist, xlist = select.select(connections, connections, connections, 0)
 
-            if controller:
-                try:
-                    logging.debug(f'Controller {action} is resolved with request: {client_request.decode()}')
-                    response = controller(request)
-                except Exception as err:
-                    logging.critical(f'Controller {action} error: {err}')
-                    response = make_response(request, 500, 'internal server error')
-            else:
-                logging.error(f'Controller {action} not found')
-                response = make_response(request, 404, f'Action with name {action} not supported')
-        else:
-            logging.error(f'Controller wrong request: {request}')
-            response = make_response(request, 400, 'wrong request')
+        for r in rlist:
+            client_request = r.recv(base_settings.get('buffersize'))
+            requests.append(client_request)
 
-        client.send(
-            json.dumps(response).encode()
-        )
-        client.close()
+        if requests:
+            client_request = requests.pop()
+            client_response = handle_default_request(client_request)
+
+            for w in wlist:
+                w.send(client_response)
 
 except KeyboardInterrupt:
     logging.info('Server shutdown')
