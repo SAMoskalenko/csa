@@ -1,6 +1,10 @@
 import yaml
+import logging
+
+import select
 from socket import socket
 from argparse import ArgumentParser
+from handlers import handle_default_request
 
 parser = ArgumentParser()
 
@@ -24,20 +28,46 @@ if args.settings:
 
 host, port = base_settings.get('host'), base_settings.get('port')
 
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('server_main.log', encoding='utf-8'),
+        logging.StreamHandler()
+    ]
+)
+
+connections = []
+requests = []
 
 try:
     server = socket()
-    server.bind((base_settings.get('host'), base_settings.get('port')))
+    server.bind((host, port))
+    server.setblocking(False)
     server.listen(5)
 
-    print(f'Server was started with {host}:{port}')
+    logging.info(f'Server was started with {host}:{port}')
 
     while True:
-        client, address = server.accept()
-        print(f'Client was connected with {address[0]}:{address[1]}')
-        request = client.recv(base_settings.get('buffersize'))
-        print(f'client send message: {request.decode()}')
-        client.send(request)
-        client.close()
+        try:
+            client, address = server.accept()
+            connections.append(client)
+            logging.info(f'Client was connected with {address[0]}:{address[1]} | Connections: {connections}')
+        except:
+            pass
+
+        rlist, wlist, xlist = select.select(connections, connections, connections, 0)
+
+        for r in rlist:
+            client_request = r.recv(base_settings.get('buffersize'))
+            requests.append(client_request)
+
+        if requests:
+            client_request = requests.pop()
+            client_response = handle_default_request(client_request)
+
+            for w in wlist:
+                w.send(client_response)
+
 except KeyboardInterrupt:
-    print('Server shutdown')
+    logging.info('Server shutdown')
