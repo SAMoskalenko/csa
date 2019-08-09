@@ -1,10 +1,27 @@
 import yaml
 import logging
-
 import select
+import threading
 from socket import socket
 from argparse import ArgumentParser
 from handlers import handle_default_request
+
+
+def read(sock, connections, requests, bufersize):
+    try:
+        client_request = sock.recv(bufersize)
+    except Exception:
+        connections.remove(sock)
+    else:
+        requests.append(client_request)
+
+
+def write(sock, connections, response):
+    try:
+        sock.send(response)
+    except Exception:
+        connections.remove(sock)
+
 
 parser = ArgumentParser()
 
@@ -59,15 +76,18 @@ try:
         rlist, wlist, xlist = select.select(connections, connections, connections, 0)
 
         for r in rlist:
-            client_request = r.recv(base_settings.get('buffersize'))
-            requests.append(client_request)
+            read_thread = threading.Thread(target=read,
+                                           args=(r, connections, requests, base_settings.get('buffersize')))
+            read_thread.start()
 
         if requests:
             client_request = requests.pop()
             client_response = handle_default_request(client_request)
 
             for w in wlist:
-                w.send(client_response)
+                write_thread = threading.Thread(target=write,
+                                                args=(w, connections, client_response))
+                write_thread.start()
 
 except KeyboardInterrupt:
     logging.info('Server shutdown')
