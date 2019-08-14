@@ -54,7 +54,7 @@ class Application:
                 rlist, wlist, xlist = select.select(self._connections, self._connections, self._connections, 0)
 
                 for r in rlist:
-                    read_thread = threading.Thread(target=self.read, args=(r))
+                    read_thread = threading.Thread(target=self.read, args=(r,))
                     read_thread.start()
 
                 if self._requests:
