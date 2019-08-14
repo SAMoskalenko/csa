@@ -26,7 +26,7 @@ class Application:
 
     def start(self):
         try:
-            read_thread = threading.Thread(target=self.read, args=())
+            read_thread = threading.Thread(target=self.read)
             read_thread.start()
 
             while True:

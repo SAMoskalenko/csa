@@ -35,7 +35,8 @@ class Application:
         except Exception:
             self._connections.remove(sock)
         else:
-            self._requests.append(client_request)
+            if client_request:
+                self._requests.append(client_request)
 
     def write(self, sock, response):
         try:
@@ -53,7 +54,7 @@ class Application:
                 rlist, wlist, xlist = select.select(self._connections, self._connections, self._connections, 0)
 
                 for r in rlist:
-                    read_thread = threading.Thread(target=self.read, args=(r,))
+                    read_thread = threading.Thread(target=self.read, args=(r))
                     read_thread.start()
 
                 if self._requests:
@@ -61,7 +62,7 @@ class Application:
                     client_response = self._handle(client_request)
 
                     for w in wlist:
-                        write_thread = threading.Thread(target=self.write, args=(w, client_response,))
+                        write_thread = threading.Thread(target=self.write, args=(w, client_response))
                         write_thread.start()
 
         except KeyboardInterrupt:
