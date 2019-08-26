@@ -21,6 +21,6 @@ else:
 
 host, port, buffersize = conf.host, conf.port, conf.buffersize
 
-app = Application(host, port, buffersize)
-app.bind()
-app.start()
+with Application(host, port, buffersize) as app:
+    app.bind()
+    app.start()

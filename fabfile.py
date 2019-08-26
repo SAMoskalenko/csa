@@ -5,6 +5,10 @@ def server():
     local('python server')
 
 
+def migrate():
+    local('python server -m')
+
+
 def client():
     local(f'python client')
 

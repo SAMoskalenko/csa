@@ -12,7 +12,7 @@ def get_server_actions():
         lambda value, item: value + [getattr(item, 'actions', [])],
         modules, []
     )
-    actionnames =  reduce(
+    actionnames = reduce(
         lambda value, item: value + getattr(item, 'actionnames', []),
         submodules, []
     )
