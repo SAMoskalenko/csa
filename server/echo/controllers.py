@@ -1,8 +1,9 @@
 from protocol import make_response
 from decorators import logged
-from database import Session
-from echo.models import Message
+from database import engine, Base, Session
+from base.models import Message
 from auth.models import User
+
 from functools import reduce
 
 
@@ -21,31 +22,8 @@ def get_echo_messages_controller(request):
     session = Session()
     messages = reduce(
         lambda value, item: value + [
-            {'action': item.action, 'data': item.data, 'created': item.created, 'user_id': item.user_id, }],
-        # session.query(Message).filter(Message.action == 'echo').all(),
-        session.query(Message).all(),
+            {'action': item.action, 'data': item.data, 'created': item.created.timestamp(), 'user_id': item.user_id}],
+        session.query(Message).filter_by(action='echo').all(),
         []
     )
     return make_response(request, 200, messages)
-
-
-@logged
-def update_messages_controller(request):
-    id_el = request.get('id_el')
-    data = request.get('data')
-    session = Session()
-    message = session.query(Message).filter(Message.id == int(id_el)).first()
-    message.data = data
-    session.add(message)
-    session.commit()
-    return make_response(request, 200, data)
-
-
-@logged
-def delete_messages_controller(request):
-    id_el = request.get('id_el')
-    session = Session()
-    message = session.query(Message).filter(Message.id == int(id_el)).first()
-    session.delete(message)
-    session.commit()
-    return make_response(request, 200)

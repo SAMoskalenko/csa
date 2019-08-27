@@ -1,4 +1,3 @@
-PyQt5
 fabric
 PyYAML==5.1.1
 requests

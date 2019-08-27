@@ -1,7 +1,8 @@
 import yaml
-from app_client import Application
 from argparse import ArgumentParser
 from config import Config
+
+from app_client import Application
 
 parser = ArgumentParser()
 
@@ -21,6 +22,6 @@ else:
 
 host, port, buffersize = conf.host, conf.port, conf.buffersize
 
-with Application(host, port, buffersize) as app:
-    app.bind()
-    app.start()
+# with Application(host, port, buffersize) as app:
+#     app.bind()
+#     app.start()
