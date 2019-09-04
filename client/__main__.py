@@ -1,6 +1,8 @@
 import yaml
-from socket import socket
 from argparse import ArgumentParser
+from config import Config
+
+from app_client import Application
 
 parser = ArgumentParser()
 
@@ -11,25 +13,14 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-base_settings = {
-    'host': 'localhost',
-    'port': 8000,
-    'buffersize': 1024
-}
-
 if args.settings:
     with open(args.settings) as file:
         settings = yaml.load(file, Loader=yaml.Loader)
-        base_settings.update(settings)
+        conf = Config(settings['host'], settings['port'], 1024)
+else:
+    conf = Config
 
-client = socket()
-client.connect((base_settings.get('host'), base_settings.get('port')))
+host, port, buffersize = conf.host, conf.port, conf.buffersize
 
-print('Client was started')
-
-message = input('Enter message: ')
-client.send(message.encode())
-print(f'Client send message: {message}')
-
-response = client.recv(base_settings.get('buffersize'))
-print(response.decode())
+with Application(host, port, buffersize) as app:
+    app.start()
