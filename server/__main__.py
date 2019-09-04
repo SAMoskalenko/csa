@@ -6,7 +6,7 @@ from app_server import Application
 from argparse import ArgumentParser
 from handlers import handle_default_request
 from config import Config
-from database import Base, engine
+from database import Base
 from settings import INSTALLED_MODULES, BASE_DIR
 
 parser = ArgumentParser()
@@ -30,6 +30,7 @@ else:
     conf = Config
 
 host, port, buffersize = conf.host, conf.port, conf.buffersize
+
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s - %(levelname)s - %(message)s',

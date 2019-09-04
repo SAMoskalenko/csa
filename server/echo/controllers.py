@@ -1,10 +1,11 @@
+from functools import reduce
+
 from protocol import make_response
 from decorators import logged
-from database import engine, Base, Session
-from base.models import Message
-from auth.models import User
+from database import Session
 
-from functools import reduce
+from base.models import Message
+
 
 
 @logged
@@ -14,6 +15,7 @@ def echo_controller(request):
     response = Message(data=data, action='echo', user_id=1)
     session.add(response)
     session.commit()
+    session.close()
     return make_response(request, 200, data)
 
 

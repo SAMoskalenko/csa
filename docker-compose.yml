@@ -7,12 +7,12 @@ services:
     volumes:
       - ./server:/app
     ports:
-      - 8000
+      - 8000:8000
 
-  client:
-    build: ./client
-    command: python .
-    volumes:
-      - ./client:/app
-    depends_on:
-      - server
+#  client:
+#    build: ./client
+#    command: python .
+#    volumes:
+#      - ./client:/app
+#    depends_on:
+#      - server

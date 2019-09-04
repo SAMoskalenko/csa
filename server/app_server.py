@@ -11,22 +11,26 @@ class Application:
         self._buffersize = buffersize
         self._handle = handle
 
-        self._server = socket()
+        self._server = None
         self._connections = list()
         self._requests = list()
 
     def __enter__(self):
+        if not self._server:
+            self._server = socket()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         message = 'Server shutdown'
         if exc_type:
-            if not exc_type is KeyboardInterrupt:
+            if exc_type is not KeyboardInterrupt:
                 message = f'Server stopped with error {exc_type}'
-        logging.info(message)
+        logging.info(message, exc_info=exc_val)
         return True
 
     def bind(self, backlog=5):
+        if not self._server:
+            self._server = socket()
         self._server.bind((self._host, self._port))
         self._server.setblocking(False)
         self._server.listen(backlog)

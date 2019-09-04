@@ -10,10 +10,3 @@ def compression_middleware(func):
         return zlib.compress(client_response)
 
     return wrapper
-
-def encryption_middleware(func):
-    @wraps(func)
-    def wrapper(request, *args, **kwargs):
-        client_response = func(request, *args, **kwargs)
-        return client_response
-    return wrapper

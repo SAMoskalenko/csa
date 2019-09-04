@@ -3,10 +3,11 @@ import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 INSTALLED_MODULES = [
-    'base',
     'auth',
+    'base',
     'echo',
     'empty',
+    'security',
     'serverdate',
     'servererrors',
 ]

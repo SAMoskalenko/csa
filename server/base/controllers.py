@@ -1,8 +1,7 @@
 from protocol import make_response
 from decorators import logged
-from database import engine, Base, Session
+from database import Session
 from base.models import Message
-from auth.models import User
 
 
 @logged
@@ -14,6 +13,7 @@ def update_messages_controller(request):
     message.data = data
     session.add(message)
     session.commit()
+    session.close()
     return make_response(request, 200, data)
 
 
@@ -24,4 +24,5 @@ def delete_messages_controller(request):
     message = session.query(Message).filter(Message.id == int(id_el)).first()
     session.delete(message)
     session.commit()
+    session.close()
     return make_response(request, 200)

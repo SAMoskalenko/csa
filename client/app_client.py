@@ -1,11 +1,19 @@
-import sys
 import json
 import zlib
 import hashlib
 import threading
+import logging
 from socket import socket
 from datetime import datetime as dt
-from PyQt5.QtWidgets import QApplication, QMainWindow
+
+from Crypto.Cipher import AES
+from Crypto.Random import get_random_bytes
+
+from protocol import make_request
+from utils import get_chunk
+
+
+# from PyQt5.QtWidgets import QApplication, QMainWindow
 
 
 class Application:
@@ -17,76 +25,65 @@ class Application:
         self._client = socket()
 
     def __enter__(self):
+        self._client.connect((self._host, self._port))
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        message = 'Client shutdown'
         if exc_type:
-            if exc_type is KeyboardInterrupt:
-                print('Client shutdown')
-            else:
-                print('Client closed with error')
-        else:
-            print('Client shutdown')
+            if not exc_type is KeyboardInterrupt:
+                message = 'Client closed with error'
+        logging.info(message, exc_info=exc_val)
         self._client.close()
         return True
 
-    def read(self):
-        response = self._client.recv(self._buffersize)
-        server_response = zlib.decompress(response)
-        print(server_response.decode())
-
     def bind(self):
         self._client.connect((self._host, self._port))
-        print('Client was started')
 
-    # def write(self):
-    #     hash_obj = hashlib.sha256()
-    #     hash_obj.update(str(dt.now().timestamp()).encode())
-    #
-    #     action = input('Enter action: ')
-    #     data = input('Enter message: ')
-    #
-    #     if 'update' in action:
-    #         id_el = input('Enter id_el: ')
-    #         request = {
-    #             'action': action,
-    #             'id_el': id_el,
-    #             'data': data,
-    #             'token': hash_obj.hexdigest(),
-    #             'time': dt.now().timestamp()
-    #         }
-    #     elif 'delete' in action:
-    #         print(action)
-    #         id_el = input('Enter id_el: ')
-    #         request = {
-    #             'action': action,
-    #             'id_el': id_el,
-    #             'data': data,
-    #             'token': hash_obj.hexdigest(),
-    #             'time': dt.now().timestamp()
-    #         }
-    #     else:
-    #         request = {
-    #             'action': action,
-    #             'data': data,
-    #             'token': hash_obj.hexdigest(),
-    #             'time': dt.now().timestamp()
-    #         }
-    #
-    #     client_request = json.dumps(request)
-    #     server_request = zlib.compress(client_request.encode())
-    #
-    #     self._client.send(server_request)
-    #     print(f'Client send data: {data}')
+    def read(self):
+        comporessed_response = self._client.recv(self._buffersize)
+        encrypted_response = zlib.decompress(comporessed_response)
 
-    def render(self):
-        window = QMainWindow()
-        window.show()
+        nonce, encrypted_response = get_chunk(encrypted_response, 16)
+        key, encrypted_response = get_chunk(encrypted_response, 16)
+        tag, encrypted_response = get_chunk(encrypted_response, 16)
+
+        cipher = AES.new(key, AES.MODE_EAX, nonce)
+
+        raw_responce = cipher.decrypt_and_verify(encrypted_response, tag)
+        logging.info(raw_responce.decode())
+
+    def write(self):
+        key = get_random_bytes(16)
+        cipher = AES.new(key, AES.MODE_EAX)
+
+        hash_obj = hashlib.sha256()
+        hash_obj.update(str(dt.now().timestamp()).encode())
+
+        action = input('Enter action: ')
+        data = input('Enter message: ')
+
+        request = make_request(action, data, hash_obj.hexdigest())
+        bytes_request = json.dumps(request).encode()
+        encrypted_request, tag = cipher.encrypt_and_digest(bytes_request)
+
+        bytes_request = zlib.compress(
+            b'%(nonce)s%(key)s%(tag)s%(data)s' % {
+                b'nonce': cipher.nonce, b'key': key, b'tag': tag, b'data': encrypted_request
+            }
+        )
+        self._client.send(bytes_request)
+
+    # def render(self):
+    #     window = QMainWindow()
+    #     window.show()
 
     def start(self):
         read_thread = threading.Thread(target=self.read)
         read_thread.start()
 
-        app = QApplication(sys.argv)
-
-        sys.exit(app.exec())
+        while True:
+            self.write()
+        # app = QApplication(sys.argv)
+        #
+        # sys.exit(app.exec())
