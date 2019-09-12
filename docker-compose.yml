@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+  server:
+    build: ./server
+    command: python . -s settings.yml
+    volumes:
+      - ./server:/app
+    ports:
+      - 8000:8000
+
+  docs:
+    build: ./docs
+    command: make html
+    volumes:
+      - ./docs:/app
+      - ./server:/app/server
+
+
+#  client:
+#    build: ./client
+#    command: python .
+#    volumes:
+#      - ./client:/app
+#    depends_on:
+#      - server

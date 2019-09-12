@@ -1,6 +1,13 @@
+import os
 import yaml
-from socket import socket
+import logging
 from argparse import ArgumentParser
+
+from .app_server import Application
+from .handlers import handle_default_request
+from .config import Config
+from .database import Base
+from .settings import INSTALLED_MODULES, BASE_DIR
 
 parser = ArgumentParser()
 
@@ -9,35 +16,37 @@ parser.add_argument(
     required=False, help='Settings file path'
 )
 
-args = parser.parse_args()
+parser.add_argument(
+    '-m', '--migrate', action='store_true',
+)
 
-base_settings = {
-    'host': 'localhost',
-    'port': 8000,
-    'buffersize': 1024
-}
+args = parser.parse_args()
 
 if args.settings:
     with open(args.settings) as file:
         settings = yaml.load(file, Loader=yaml.Loader)
-        base_settings.update(settings)
+        conf = Config(settings['host'], settings['port'], 1024)
+else:
+    conf = Config
 
-host, port = base_settings.get('host'), base_settings.get('port')
+host, port, buffersize = conf.host, conf.port, conf.buffersize
 
-
-try:
-    server = socket()
-    server.bind((base_settings.get('host'), base_settings.get('port')))
-    server.listen(5)
-
-    print(f'Server was started with {host}:{port}')
-
-    while True:
-        client, address = server.accept()
-        print(f'Client was connected with {address[0]}:{address[1]}')
-        request = client.recv(base_settings.get('buffersize'))
-        print(f'client send message: {request.decode()}')
-        client.send(request)
-        client.close()
-except KeyboardInterrupt:
-    print('Server shutdown')
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('server_main.log', encoding='utf-8'),
+        logging.StreamHandler()
+    ]
+)
+if args.migrate:
+    module_name_list = [f'{item}.models' for item in INSTALLED_MODULES]
+    module_path_list = (os.path.join(BASE_DIR, item, 'models.py') for item in INSTALLED_MODULES)
+    for index, path in enumerate(module_path_list):
+        if os.path.exists(path):
+            __import__(module_name_list[index])
+    Base.metadata.create_all()
+else:
+    with Application(host, port, buffersize, handle_default_request) as app:
+        app.bind()
+        app.start()
