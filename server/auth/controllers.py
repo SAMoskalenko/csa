@@ -2,64 +2,67 @@ import hmac
 from datetime import datetime
 from functools import reduce
 
-from database import session_scope
-from protocol import make_response
+from server.database import session_scope
+from server.protocol import make_response
 
 from .decorators import login_required
 from .utils import authenticate, login
 from .settings import SECRET_KEY
 from .models import User, Session
 
-from database import Session as sess
+from server.database import Session as sess
 
-from decorators import logged
+from server.decorators import logged
 
 
 def registration_controller(request):
     errors = {}
     is_valid = True
+    data = request.get('data')
 
-    if not 'password' in request:
+    if not 'password' in data:
         errors.update({'password': 'Attribute is required'})
         is_valid = False
 
-    if not 'login' in request:
+    if not 'login' in data:
         errors.update({'login': 'Attribute is required'})
         is_valid = False
 
     if not is_valid:
         return make_response(request, 400, {'errors': errors})
 
-    hmac_obj = hmac.new(SECRET_KEY, request.get('password'))
-    password_digest = hmac_obj.digest()
+    hmac_obj = hmac.new(SECRET_KEY.encode(), data.get('password').encode())
+    password_digest = hmac_obj.hexdigest()
 
     with session_scope() as db_session:
-        user = User(name=request.get('login'), password=password_digest)
+        user = User(name=data.get('login'), password=password_digest)
         db_session.add(user)
-        token = login(request, user)
-        return make_response(request, 200, {'token': token})
+    token = login(request, user)
+    return make_response(request, 200, {'token': token})
 
 
 def login_controller(request):
     errors = {}
     is_valid = True
+    data = request.get('data')
+
 
     if not 'time' in request:
         errors.update({'time': 'Attribute is required'})
         is_valid = False
 
-    if not 'password' in request:
+    if not 'password' in data:
         errors.update({'password': 'Attribute is required'})
         is_valid = False
 
-    if not 'login' in request:
+    if not 'login' in data:
         errors.update({'login': 'Attribute is required'})
         is_valid = False
 
     if not is_valid:
         return make_response(request, 400, {'errors': errors})
 
-    user = authenticate(request.get('login'), request.get('password'))
+    user = authenticate(data.get('login'), data.get('password'))
 
     if user:
         token = login(request, user)

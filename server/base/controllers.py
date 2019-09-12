@@ -1,7 +1,7 @@
-from protocol import make_response
-from decorators import logged
-from database import Session
-from base.models import Message
+from server.protocol import make_response
+from server.decorators import logged
+from server.database import Session
+from .models import Message
 
 
 @logged

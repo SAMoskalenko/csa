@@ -1,5 +1,5 @@
 import pytest
-from protocol import make_response
+from server.protocol import make_response
 from datetime import datetime
 
 

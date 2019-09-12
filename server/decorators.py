@@ -11,3 +11,6 @@ def logged(func):
         return func(request, *args, **kwargs)
 
     return wrapper
+
+
+

@@ -9,8 +9,8 @@ from datetime import datetime as dt
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 
-from protocol import make_request
-from utils import get_chunk
+from .protocol import make_request
+from .utils import get_chunk
 
 
 # from PyQt5.QtWidgets import QApplication, QMainWindow
@@ -61,7 +61,7 @@ class Application:
         hash_obj.update(str(dt.now().timestamp()).encode())
 
         action = input('Enter action: ')
-        data = input('Enter message: ')
+        data = json.loads(input('Enter data: '))
 
         request = make_request(action, data, hash_obj.hexdigest())
         bytes_request = json.dumps(request).encode()

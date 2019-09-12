@@ -1,4 +1,4 @@
-import settings
+import server.settings
 
 DEFAULT_SECRET_KEY = b'zp5bK7Ah'
 

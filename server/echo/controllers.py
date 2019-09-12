@@ -1,18 +1,30 @@
 from functools import reduce
 
-from protocol import make_response
-from decorators import logged
-from database import Session
+from server.protocol import make_response
+from server.decorators import logged
+from server.database import Session
 
-from base.models import Message
+from server.base.models import Message
 
-
+'''
+API echo controllers
+'''
 
 @logged
 def echo_controller(request):
+    '''
+    echo controller
+
+    Creating new echo message
+
+    :param request:
+        {'action': 'echo', 'data': ''}
+    :return:
+        {request, 200, data}
+    '''
     data = request.get('data')
     session = Session()
-    response = Message(data=data, action='echo', user_id=1)
+    response = Message(data=data.get('data'), action='echo')
     session.add(response)
     session.commit()
     session.close()
@@ -21,6 +33,16 @@ def echo_controller(request):
 
 @logged
 def get_echo_messages_controller(request):
+    '''
+    get echo nmessages controller
+
+    Getting a collection of messages where action 'echo'
+
+    :param request:
+        {'action': 'get_echo', 'data' = None}
+    :return:
+        All echo messages
+    '''
     session = Session()
     messages = reduce(
         lambda value, item: value + [

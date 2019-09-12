@@ -1,4 +1,4 @@
-import settings
+import server.settings as settings
 
 DEFAULT_MESSAGE_PATTERN = b'%(nonce)s%(key)s%(tag)s%(data)s'
 

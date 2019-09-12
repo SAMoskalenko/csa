@@ -1,8 +1,8 @@
 import yaml
 from argparse import ArgumentParser
-from config import Config
 
-from app_client import Application
+from .app_client import Application
+from .config import Config
 
 parser = ArgumentParser()
 

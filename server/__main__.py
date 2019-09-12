@@ -1,13 +1,13 @@
 import os
 import yaml
 import logging
-
-from app_server import Application
 from argparse import ArgumentParser
-from handlers import handle_default_request
-from config import Config
-from database import Base
-from settings import INSTALLED_MODULES, BASE_DIR
+
+from .app_server import Application
+from .handlers import handle_default_request
+from .config import Config
+from .database import Base
+from .settings import INSTALLED_MODULES, BASE_DIR
 
 parser = ArgumentParser()
 

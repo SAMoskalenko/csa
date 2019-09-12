@@ -1,9 +1,9 @@
 from datetime import datetime
-from protocol import make_response
-from database import Session
-from base.models import Message
-from auth.models import User
-from decorators import logged
+from server.protocol import make_response
+from server.database import Session
+from server.base.models import Message
+from server.auth.models import User
+from server.decorators import logged
 
 from functools import reduce
 

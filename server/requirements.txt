@@ -7,3 +7,4 @@ fabric3
 tabulate
 sqlalchemy
 pycryptodomex
+pycryptodome

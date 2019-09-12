@@ -2,9 +2,9 @@ from datetime import datetime
 from sqlalchemy import String, Column, Integer, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 
-from auth.models import User
+from server.auth.models import User
 
-from database import Base
+from server.database import Base
 
 
 class Message(Base):

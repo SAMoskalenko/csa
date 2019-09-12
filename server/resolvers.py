@@ -1,6 +1,6 @@
 from functools import reduce
 
-from settings import INSTALLED_MODULES
+from .settings import INSTALLED_MODULES
 
 
 def get_server_actions():

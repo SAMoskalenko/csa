@@ -1,9 +1,8 @@
-import logging
 from functools import wraps
 
-from protocol import make_response
+from server.protocol import make_response
 
-from database import session_scope
+from server.database import session_scope
 from .models import Session as Session
 
 

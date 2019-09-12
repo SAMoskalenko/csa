@@ -9,6 +9,14 @@ services:
     ports:
       - 8000:8000
 
+  docs:
+    build: ./docs
+    command: make html
+    volumes:
+      - ./docs:/app
+      - ./server:/app/server
+
+
 #  client:
 #    build: ./client
 #    command: python .
